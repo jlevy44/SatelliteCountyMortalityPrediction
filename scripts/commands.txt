@@ -1,0 +1,24 @@
+1. coarse hyperparameter scan, varied some of the below parameters, see command arguments
+python scripts/train_model.py --model_save_loc saved_model.pkl --averaged --lr 5e-5
+python scripts/train_model.py --model_save_loc saved_model_rn50.pkl --loss_fn poisson --lr 1e-4 --pretrain_imagenet --architecture resnet50
+
+2. Extract and plot embeddings
+python scripts/train_model.py --model_save_loc saved_model_rn50_DONOTUSE.pkl --loss_fn poisson --lr 1e-4 --pretrain_imagenet --architecture resnet50 --model_pretrain_loc saved_model_rn50.pkl --extract_embeddings
+for set in train test val ; do python scripts/train_model.py --model_save_loc saved_model_rn50.pkl --loss_fn poisson --lr 1e-4 --pretrain_imagenet --architecture resnet50  --extract_embeddings --embedding_set ${set} ; done
+python scripts/plot_embeddings.py --image_plot --outputfname output.embeddings.png --sample_p 0.3 --fig_size 60 --zoom 0.1
+python scripts/plot_embeddings.py
+python scripts/plot_embeddings.py --pca  --image_plot --outputfname output.embeddings.pca.png --sample_p 0.3 --fig_size 60 --zoom 0.1
+python scripts/plot_embeddings.py --pca  --outputfname output.embeddings.pca.html
+python scripts/plot_embeddings.py --embeddings_file test_embeddings.pkl --image_plot  --outputfname output.embeddings.png --sample_p 1. --fig_size 90 --zoom 0.1
+
+3. Interpret models
+python scripts/interpret_model.py --model_loc saved_model_rn50.pkl --county ${i} --dataset data/training_datasets_original_new.csv --n_samples 1000 --local_smoothing 0.8
+
+4. Covariate adjustment (combine demographics and image features) for deep learning model
+python scripts/train_model.py --eval_test_during_training --model_save_loc saved_model_rn50_covar_new.pkl --loss_fn mse --lr 5e-4 --pretrain_imagenet --architecture resnet50  --use_covariates --dropout_p 0.2 --checkpoint_dir checkpoints_covar --save_load_dict
+python scripts/train_model.py --model_save_loc saved_model_rn50_nocovar.pkl --loss_fn mse --lr 5e-4 --pretrain_imagenet --architecture resnet50   --dropout_p 0.2
+python scripts/train_model.py --eval_test_during_training --model_save_loc saved_model_NO_USE.pkl --loss_fn mse --lr 5e-4 --pretrain_imagenet --architecture resnet50  --use_covariates --dropout_p 0.2 --checkpoint_dir checkpoints_covar  --model_pretrain_loc saved_model_rn50_covar_new.pkl --predict_mode
+
+5. Dataset Scaling Tests; Number of Schools Sampled per County (n_schools) and size of surrounding residential neighborhood sampled (effective_grid_len)
+for n_schools in  1 2 3 4 ; do for effective_grid_len in 1 3 5 7 ; do ls saved_model_rn50_grid_${effective_grid_len}_nschool_${n_schools}.pkl || python scripts/train_model.py --checkpoint_dir grid_${effective_grid_len}_nschool_${n_schools}_checkpoints/ --model_save_loc saved_model_rn50_grid_${effective_grid_len}_nschool_${n_schools}.pkl --loss_fn mse --lr 5e-4 --pretrain_imagenet --architecture resnet50  --effective_grid_len ${effective_grid_len} --n_schools ${n_schools} --dropout_p 0.2  ; done; done;
+
