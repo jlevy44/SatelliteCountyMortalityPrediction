@@ -1,7 +1,7 @@
 library(brms)
 library(emmeans)
 library(bayestestR)
-dat<-read.csv("school_area_pearson.csv")
+dat<-read.csv("../data/school_area_pearson.csv")
 dat$n_schools<-factor(dat$n_schools)
 dat$area<-ordered(dat$area)
 mod.orig<-brm(pearsonr~n_schools*mo(area),data=dat,cores=4,seed=42)
