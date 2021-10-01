@@ -1,0 +1,12 @@
+library(brms)
+library(emmeans)
+library(bayestestR)
+dat<-read.csv("school_area_pearson.csv")
+dat$n_schools<-factor(dat$n_schools)
+dat$area<-ordered(dat$area)
+mod.orig<-brm(pearsonr~n_schools*mo(area),data=dat,cores=4,seed=42)
+mod.mat<-as.data.frame(mod.orig)
+describe_posterior(data.frame(s1=mod.mat$bsp_moarea,
+s2=mod.mat$bsp_moarea+mod.mat$`bsp_moarea:n_schools2`,
+s3=mod.mat$bsp_moarea+mod.mat$`bsp_moarea:n_schools3`,
+s4=mod.mat$bsp_moarea+mod.mat$`bsp_moarea:n_schools4`),ci=0.95)
